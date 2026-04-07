@@ -140,14 +140,44 @@ Cuando el usuario describe ejercicio, respondé con:
 IMPORTANTE: Si el usuario dice que su reloj Garmin marcó X calorías, usá ese dato como fuente primaria. Solo estimá si no tiene dato del reloj.`;
 }
 
+function getPantryContext(): string {
+  const db = getDb();
+  const ingredients = db.prepare("SELECT name, quantity_g, storage FROM pantry WHERE category = 'ingrediente' ORDER BY storage, name").all() as Array<{ name: string; quantity_g: number | null; storage: string }>;
+  const condiments = db.prepare("SELECT name FROM pantry WHERE category = 'condimento' ORDER BY name").all() as Array<{ name: string }>;
+  const equipment = db.prepare("SELECT name, notes FROM equipment ORDER BY name").all() as Array<{ name: string; notes: string | null }>;
+
+  const ingredientLines = ingredients.map(i =>
+    `- ${i.name}${i.quantity_g ? ` (${i.quantity_g}g)` : ''} [${i.storage}]`
+  ).join('\n');
+
+  const condimentList = condiments.map(c => c.name).join(', ');
+  const equipmentList = equipment.map(e => e.name + (e.notes ? ` (${e.notes})` : '')).join(', ');
+
+  return `
+INGREDIENTES DISPONIBLES EN DESPENSA:
+${ingredientLines || 'No hay ingredientes cargados.'}
+
+CONDIMENTOS DISPONIBLES: ${condimentList || 'Ninguno cargado.'}
+
+EQUIPAMIENTO DE COCINA: ${equipmentList || 'No especificado.'}`;
+}
+
 function buildRecipeSystemPrompt(ctx: ReturnType<typeof getDayContext>): string {
-  return `Sos un chef nutricionista. Tu cliente es Jonathan, ${ctx.profile.weight_kg}kg, que hace batch cooking con ${ctx.profile.kitchen_equipment}.
+  const pantryCtx = getPantryContext();
+
+  return `Sos un chef nutricionista. Tu cliente es Jonathan, ${ctx.profile.weight_kg}kg, que hace batch cooking.
 
 Respondé SIEMPRE en JSON válido, sin markdown, sin backticks.
+${pantryCtx}
 
-EQUIPAMIENTO DISPONIBLE: ${ctx.profile.kitchen_equipment}
 OBJETIVO CALÓRICO: ${ctx.goalCalories} kcal/día
 MACROS OBJETIVO: P:${ctx.profile.goal_protein_g}g C:${ctx.profile.goal_carbs_g}g F:${ctx.profile.goal_fat_g}g
+
+REGLAS:
+- Priorizá ingredientes que el usuario YA TIENE en la despensa.
+- Si el usuario dice "armame algo con lo que tengo", usá SOLO ingredientes de la lista de arriba.
+- Si un ingrediente tiene cantidad en gramos, no uses más de lo disponible.
+- Usá el equipamiento listado. Si podés usar la olla a presión eléctrica o la airfryer, priorizalas.
 
 Cuando el usuario dice qué ingredientes tiene o pide una receta, respondé con:
 {

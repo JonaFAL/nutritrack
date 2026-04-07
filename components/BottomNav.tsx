@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const tabs = [
   { href: '/', label: 'Hoy', icon: '📊' },
   { href: '/chat', label: 'Chat IA', icon: '💬' },
+  { href: '/pantry', label: 'Despensa', icon: '🥩' },
   { href: '/history', label: 'Historial', icon: '📅' },
   { href: '/settings', label: 'Config', icon: '⚙️' },
 ];

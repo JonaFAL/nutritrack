@@ -76,6 +76,24 @@ export interface DailyNote {
   ai_summary: string | null;
 }
 
+export interface PantryItem {
+  id: number;
+  name: string;
+  quantity_g: number | null;
+  unit: string;
+  category: 'ingrediente' | 'condimento';
+  storage: 'congelado' | 'heladera' | 'alacena' | 'abierto';
+  notes: string | null;
+  updated_at: string;
+}
+
+export interface EquipmentItem {
+  id: number;
+  name: string;
+  notes: string | null;
+  created_at: string;
+}
+
 // ==================== AI Response Types ====================
 
 export interface AIMealItem {

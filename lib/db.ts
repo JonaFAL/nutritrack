@@ -93,8 +93,27 @@ function initializeDb(db: Database.Database) {
       ai_summary TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS pantry (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      quantity_g REAL,
+      unit TEXT DEFAULT 'g',
+      category TEXT DEFAULT 'ingrediente',  -- 'ingrediente', 'condimento'
+      storage TEXT DEFAULT 'alacena',       -- 'congelado', 'heladera', 'alacena', 'abierto'
+      notes TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS equipment (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE INDEX IF NOT EXISTS idx_meals_date ON meals(date);
     CREATE INDEX IF NOT EXISTS idx_exercises_date ON exercises(date);
+    CREATE INDEX IF NOT EXISTS idx_pantry_category ON pantry(category);
   `);
 
   // Ensure default profile exists
